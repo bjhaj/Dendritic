@@ -35,6 +35,8 @@ def create_model(args):
     elif args.model_name == 'ofa_flops_595m_s':
         model = ofa_flops_595m_s(model_params)
     elif args.model_name == 'resnet50':
+        model = timm.create_model('resnet50', pretrained=False, num_classes=args.num_classes)
+    elif args.model_name == 'resnet50pretrained':
         model = timm.create_model('resnet50', pretrained=True, num_classes=args.num_classes)
     elif args.model_name == 'vit_base_patch16_224': # notice - qkv_bias==False currently
         model_kwargs = dict(
