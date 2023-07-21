@@ -1,6 +1,5 @@
 import torch
 import timm
-from ..tresnet import TResnetM, TResnetL
 from src_files.helper_functions.distributed import print_at_master
 
 
