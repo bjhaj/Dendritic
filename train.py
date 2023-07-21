@@ -30,7 +30,8 @@ parser.add_argument('--epochs', default=10, type=int)
 parser.add_argument('--weight_decay', default=1e-4, type=float)
 parser.add_argument("--local_rank", default=0, type=int)
 parser.add_argument("--label_smooth", default=0.2, type=float)
-
+parser.add_argument("--load_direct", default = False, type=bool)
+parser.add_argument("--save_model_path", default = 'model', type=str)
 
 def main():
     # arguments
@@ -43,7 +44,12 @@ def main():
     setup_distrib(args)
 
     # Setup model
-    model = create_model(args).cuda()
+    #model = create_model(args).cuda()
+    if args.load_direct == True and args.model_path:
+      model = torch.load(args.model_path)
+    else:
+      model = create_model(args).cuda()
+    
     model = to_ddp(model, args)
 
     # create optimizer
@@ -52,9 +58,10 @@ def main():
     # Data loading
     train_loader, val_loader = create_data_loaders(args)
 
-    # Actuall Training
-    history = train(model, train_loader, val_loader, optimizer, args)
+    # Actual Training
+    model, history = train(model, train_loader, val_loader, optimizer, args)
     plot_history(history)
+    torch.save(model,args.save_model_path)
 
 def train(model, train_loader, val_loader, optimizer, args):
     history = {'train_loss':[],'val_loss':[],'train_acc1': [], 'train_acc5': [], 'val_acc1': [], 'val_acc5': []}
@@ -116,7 +123,7 @@ def train(model, train_loader, val_loader, optimizer, args):
         # validation epoch
         validate(args, history, val_loader, model)
 
-    return history
+    return model, history
 
 def validate(args, history, val_loader, model):
     loss_fn = CrossEntropyLS(args.label_smooth)
