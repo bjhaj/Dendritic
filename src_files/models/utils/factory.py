@@ -1,7 +1,5 @@
 import torch
 import timm
-
-from ..ofa.model_zoo import ofa_flops_595m_s
 from ..tresnet import TResnetM, TResnetL
 from src_files.helper_functions.distributed import print_at_master
 
