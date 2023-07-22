@@ -32,6 +32,8 @@ parser.add_argument("--local_rank", default=0, type=int)
 parser.add_argument("--label_smooth", default=0.2, type=float)
 parser.add_argument("--load_direct", default = False, type=bool)
 parser.add_argument("--save_model_path", default = 'model', type=str)
+parser.add_argument("--frozen", default = False, type=bool)
+
 
 def main():
     # arguments
