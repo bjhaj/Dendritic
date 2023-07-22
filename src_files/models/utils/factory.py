@@ -20,6 +20,18 @@ def load_model_weights(model, model_path):
             print_at_master('could not load layer: {}, not in checkpoint'.format(key))
     return model
 
+def find_last_layer_name(model):
+    last_layer_name = None
+    for name, _ in model.named_parameters():
+        last_layer_name = name
+    return last_layer_name
+
+
+def freeze_layers_except_last(model):
+    last_layer_name = find_last_layer_name(model)
+    for name, param in model.named_parameters():
+        if name != last_layer_name:
+            param.requires_grad = False
 
 def create_model(args):
     print_at_master('creating model {}...'.format(args.model_name))
@@ -52,6 +64,11 @@ def create_model(args):
 
     if args.model_path and args.model_path!='':  # make sure to load pretrained ImageNet-1K model
         model = load_model_weights(model, args.model_path)
+
+    if args.frozen == True:
+      print_at_master("layers are frozen")
+      freeze_layers_except_last(model)
+    
     print('done\n')
 
     return model
