@@ -61,14 +61,31 @@ def printROC(args, model, dataset):
   plt.legend()
   plt.show()
 
+def calculate_precision_recall_f1(y_true, y_pred):
+    tp = np.sum(y_true & (y_pred >= 0.5))
+    fp = np.sum((~y_true) & (y_pred >= 0.5))
+    fn = np.sum(y_true & (y_pred < 0.5))
+
+    precision = tp / (tp + fp)
+    recall = tp / (tp + fn)
+    f1_score = 2 * (precision * recall) / (precision + recall)
+    return precision, recall, f1_score
+
+
 def validation_accuracy(args, history, val_loader, model):
     loss_fn = CrossEntropyLS(args.label_smooth)
     model.eval()
     top1 = AverageMeter()
-    val_loss_meter = AverageMeter()  # Add an AverageMeter to track validation loss
+    val_loss_meter = AverageMeter()
+    num_classes = args.num_classes
+
+    # Initialize dictionaries to store true positives, false positives, and false negatives for each class
+    tp_dict = {i: 0 for i in range(num_classes)}
+    fp_dict = {i: 0 for i in range(num_classes)}
+    fn_dict = {i: 0 for i in range(num_classes)}
+
     with torch.no_grad():
         for i, (input, target) in enumerate(val_loader):
-
             # mixed precision
             with autocast():
                 logits = model(input).float()
@@ -84,11 +101,36 @@ def validation_accuracy(args, history, val_loader, model):
                 torch.cuda.synchronize()
             top1.update(acc1.item(), input.size(0))
 
+            # Convert target and logits to numpy arrays
+            target_np = target.cpu().numpy()
+            logits_np = torch.softmax(logits, dim=1).cpu().numpy()
+
+            # One-vs-all calculation for each class
+            for class_idx in range(num_classes):
+                y_true_class = (target_np == class_idx)
+                y_pred_class = logits_np[:, class_idx]
+
+                # Calculate true positives, false positives, and false negatives for the current class
+                tp = np.sum(y_true_class & (y_pred_class >= 0.5))
+                fp = np.sum((~y_true_class) & (y_pred_class >= 0.5))
+                fn = np.sum(y_true_class & (y_pred_class < 0.5))
+
+                # Update dictionaries with the counts for the current class
+                tp_dict[class_idx] += tp
+                fp_dict[class_idx] += fp
+                fn_dict[class_idx] += fn
+
+    # Calculate and print the metrics for each class
+    for class_idx in range(num_classes):
+        precision, recall, f1_score = calculate_precision_recall_f1(y_true=(target_np == class_idx), y_pred=logits_np[:, class_idx])
+        print_at_master("Class {}: Precision: {:.4f}, Recall: {:.4f}, F1 Score: {:.4f}"
+                        .format(class_idx, precision, recall, f1_score))
+
     history['val_acc'].append(top1.avg)
-    # Save the validation loss for the current epoch
     history['val_loss'].append(val_loss_meter.avg)
 
     print_at_master("Validation Accuracy: {:.4f}, Validation Loss: {:.4f}"
-    .format(top1.avg,val_loss_meter.avg))
+                    .format(top1.avg, val_loss_meter.avg))
 
     model.train()
+
