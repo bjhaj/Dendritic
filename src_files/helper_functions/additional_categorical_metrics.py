@@ -88,7 +88,7 @@ def validation_accuracy(args, history, val_loader, model):
     # Save the validation loss for the current epoch
     history['val_loss'].append(val_loss_meter.avg)
 
-    print_at_master("Validation Loss: {:.4f}, Validation Accuracy: {:.4f}"
-    .format(val_loss_meter.avg,top1.avg))
+    print_at_master("Validation Accuracy: {:.4f}, Validation Loss: {:.4f}"
+    .format(top1.avg,val_loss_meter.avg))
 
     model.train()
