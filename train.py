@@ -16,6 +16,7 @@ from src_files.models import create_model
 from src_files.loss_functions.losses import CrossEntropyLS
 from torch.cuda.amp import GradScaler, autocast
 from src_files.optimizers.create_optimizer import create_optimizer
+from src_files.helper_functions.additional_categorical_metrics import printROC, validation_accuracy
 
 parser = argparse.ArgumentParser(description='PyTorch ImageNet21K Single-label Training')
 parser.add_argument('--data_path', default = '/content/newtraindata', type=str)
@@ -64,9 +65,10 @@ def main():
     model, history = train(model, train_loader, val_loader, optimizer, args)
     plot_history(history)
     torch.save(model,args.save_model_path)
+    printROC(args, model, val_loader.dataset)
 
 def train(model, train_loader, val_loader, optimizer, args):
-    history = {'train_loss':[],'val_loss':[],'train_acc1': [], 'train_acc5': [], 'val_acc1': [], 'val_acc5': []}
+    history = {'train_loss':[],'val_loss':[],'train_acc': [],'val_acc': []}
     # set loss
     loss_fn = CrossEntropyLS(args.label_smooth)
     # set scheduler
@@ -82,12 +84,11 @@ def train(model, train_loader, val_loader, optimizer, args):
             train_loader.sampler.set_epoch(epoch)
 
         # train epoch
-        print_at_master("\nEpoch {}".format(epoch))
+        print_at_master("\nEpoch {}/{}".format(epoch+1,args.epochs))
         epoch_start_time = time.time()
 
         train_loss_meter = AverageMeter()
         train_top1 = AverageMeter()
-        train_top5 = AverageMeter()
 
         for i, (input, target) in enumerate(train_loader):
             with autocast():  # mixed precision
@@ -104,69 +105,29 @@ def train(model, train_loader, val_loader, optimizer, args):
             acc1, acc5 = accuracy(output, target, topk=(1, 5))
             if num_distrib() > 1:
                 acc1 = reduce_tensor(acc1, num_distrib())
-                acc5 = reduce_tensor(acc5, num_distrib())
                 torch.cuda.synchronize()
             train_top1.update(acc1.item(), input.size(0))
-            train_top5.update(acc5.item(), input.size(0))
 
-        history['train_acc1'].append(train_top1.avg)
-        history['train_acc5'].append(train_top5.avg)
+        history['train_acc'].append(train_top1.avg)
         history['train_loss'].append(train_loss_meter.avg)
-        print_at_master("Epoch: {}/{}, Training Loss: {:.4f}".format(epoch + 1, args.epochs, train_loss_meter.avg))
+        print_at_master("Training Accuracy: {:.4f}, Training Loss: {:.4f}".format(train_top1.avg, train_loss_meter.avg))
 
         epoch_time = time.time() - epoch_start_time
-        print_at_master(
-            "\nFinished Epoch, Training Rate: {:.1f} [img/sec]".format(len(train_loader) *
-                                                                       args.batch_size / epoch_time * max(num_distrib(),
-                                                                                                          1)))
+        #print_at_master(
+            #"\nFinished Epoch, Training Rate: {:.1f} [img/sec]".format(len(train_loader) *
+                                                                      # args.batch_size / epoch_time * max(num_distrib(),
+                                                                                                         # 1)))
 
                                                                                                           
 
         # validation epoch
-        validate(args, history, val_loader, model)
+        validation_accuracy(args, history, val_loader, model)
 
     return model, history
 
-def validate(args, history, val_loader, model):
-    loss_fn = CrossEntropyLS(args.label_smooth)
-    print_at_master("starting validation")
-    model.eval()
-    top1 = AverageMeter()
-    top5 = AverageMeter()
-    val_loss_meter = AverageMeter()  # Add an AverageMeter to track validation loss
-    with torch.no_grad():
-        for i, (input, target) in enumerate(val_loader):
-
-            # mixed precision
-            with autocast():
-                logits = model(input).float()
-
-            # Calculate loss and record it with the AverageMeter
-            loss = loss_fn(logits, target)
-            val_loss_meter.update(loss.item(), input.size(0))
-
-            # measure accuracy and record accuracy
-            acc1, acc5 = accuracy(logits, target, topk=(1, 5))
-            if num_distrib() > 1:
-                acc1 = reduce_tensor(acc1, num_distrib())
-                acc5 = reduce_tensor(acc5, num_distrib())
-                torch.cuda.synchronize()
-            top1.update(acc1.item(), input.size(0))
-            top5.update(acc5.item(), input.size(0))
-
-    history['val_acc1'].append(top1.avg)
-    history['val_acc5'].append(top5.avg)
-
-    # Save the validation loss for the current epoch
-    history['val_loss'].append(val_loss_meter.avg)
-
-    print_at_master("Validation results:")
-    print_at_master('Acc_Top1 [%] {:.2f},  Acc_Top5 [%] {:.2f} '.format(top1.avg, top5.avg))
-    model.train()
-
 
 def plot_history(history):
-    epochs = range(1, len(history['train_acc1']) + 1)
+    epochs = range(1, len(history['train_acc']) + 1)
 
     plt.figure(figsize=(12, 6))
 
@@ -179,23 +140,15 @@ def plot_history(history):
     plt.title('Training and Validation Loss')
     plt.legend()
 
-    # Plot Top-1 accuracy
+    # Plot accuracy
     plt.subplot(1, 3, 2)
-    plt.plot(epochs, history['train_acc1'], label='Training Accuracy')
-    plt.plot(epochs, history['val_acc1'], label='Validation Accuracy')
+    plt.plot(epochs, history['train_acc'], label='Training Accuracy')
+    plt.plot(epochs, history['val_acc'], label='Validation Accuracy')
     plt.xlabel('Epochs')
     plt.ylabel('Accuracy')
-    plt.title('Training and Validation Top-1 Accuracy')
+    plt.title('Training and Validation Accuracy')
     plt.legend()
 
-    # Plot Top-5 accuracy
-    plt.subplot(1, 3, 3)
-    plt.plot(epochs, history['train_acc5'], label='Training Accuracy')
-    plt.plot(epochs, history['val_acc5'], label='Validation Accuracy')
-    plt.xlabel('Epochs')
-    plt.ylabel('Accuracy')
-    plt.title('Training and Validation Top-5 Accuracy')
-    plt.legend()
     
     plt.tight_layout()
     plt.show()
