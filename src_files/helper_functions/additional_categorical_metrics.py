@@ -3,11 +3,16 @@ import torch
 import matplotlib.pyplot as plt
 from sklearn.metrics import roc_auc_score, roc_curve
 from sklearn.preprocessing import label_binarize
+from src_files.loss_functions.losses import CrossEntropyLS
+from src_files.helper_functions.general_helper_functions import accuracy, AverageMeter, silence_PIL_warnings
+from src_files.helper_functions.distributed import print_at_master, to_ddp, reduce_tensor, num_distrib, setup_distrib
+from torch.cuda.amp import GradScaler, autocast
+
 
 # Assume you have a PyTorch model named 'model' and a test dataset named 'test_dataset'
 
 # Set the device for computation (CPU or GPU)
-def additional_metrics(model, dataset):
+def printROC(args, model, dataset):
   # Set the device for computation (CPU or GPU)
   device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -15,7 +20,7 @@ def additional_metrics(model, dataset):
   model.eval()
 
   # Define the number of classes
-  num_classes = len(dataset.classes)
+  num_classes = args.num_classes
 
   # Create an empty array to store the predicted probabilities for each class
   y_pred_proba = np.zeros((len(dataset), num_classes))
@@ -55,3 +60,35 @@ def additional_metrics(model, dataset):
   plt.title('ROC Curves - Multiclass Classification')
   plt.legend()
   plt.show()
+
+def validation_accuracy(args, history, val_loader, model):
+    loss_fn = CrossEntropyLS(args.label_smooth)
+    model.eval()
+    top1 = AverageMeter()
+    val_loss_meter = AverageMeter()  # Add an AverageMeter to track validation loss
+    with torch.no_grad():
+        for i, (input, target) in enumerate(val_loader):
+
+            # mixed precision
+            with autocast():
+                logits = model(input).float()
+
+            # Calculate loss and record it with the AverageMeter
+            loss = loss_fn(logits, target)
+            val_loss_meter.update(loss.item(), input.size(0))
+
+            # measure accuracy and record accuracy
+            acc1, acc5 = accuracy(logits, target, topk=(1, 5))
+            if num_distrib() > 1:
+                acc1 = reduce_tensor(acc1, num_distrib())
+                torch.cuda.synchronize()
+            top1.update(acc1.item(), input.size(0))
+
+    history['val_acc'].append(top1.avg)
+    # Save the validation loss for the current epoch
+    history['val_loss'].append(val_loss_meter.avg)
+
+    print_at_master("Validation Loss: {:.4f}, Validation Accuracy: {:.4f}"
+    .format(val_loss_meter.avg,top1.avg))
+
+    model.train()
