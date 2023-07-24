@@ -40,7 +40,7 @@ def printROC(args, model, dataset):
   color_palette = plt.cm.get_cmap('tab10')
 
   # Plot ROC curves for each class
-  plt.figure()
+  plt.figure(figsize=(12, 6))
   for class_idx in range(num_classes):
       y_true_class = y_true[:, class_idx]
       y_pred_class = y_pred_proba[:, class_idx]
@@ -128,6 +128,9 @@ def validation_accuracy(args, history, val_loader, model):
 
     history['val_acc'].append(top1.avg)
     history['val_loss'].append(val_loss_meter.avg)
+    history['precision'].append(precision)
+    history['recall'].append(recall)
+    history['f1'].append(f1_score)
 
     print_at_master("Validation Accuracy: {:.4f}, Validation Loss: {:.4f}"
                     .format(top1.avg, val_loss_meter.avg))
