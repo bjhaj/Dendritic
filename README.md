@@ -18,6 +18,6 @@ can be considered a fine-grained classification task.
 
 Access the data [here](https://drive.google.com/drive/folders/13fi2c26jC9bgEhUhBvfG8nAqOZridZEp?usp=drive_link). 
 
-Implementations are in the notebooks directory.
+[Implementations](https://github.com/bjhaj/Dendritic/blob/main/notebooks/Dendritic_Fing.ipynb)
 
 More to come.
