@@ -68,7 +68,7 @@ def main():
     printROC(args, model, val_loader.dataset)
 
 def train(model, train_loader, val_loader, optimizer, args):
-    history = {'train_loss':[],'val_loss':[],'train_acc': [],'val_acc': []}
+    history = {'train_loss':[],'val_loss':[],'train_acc': [],'val_acc': [],'precision':[],'recall': [],'f1': []}
     # set loss
     loss_fn = CrossEntropyLS(args.label_smooth)
     # set scheduler
@@ -132,7 +132,7 @@ def plot_history(history):
     plt.figure(figsize=(12, 6))
 
     # Plot loss
-    plt.subplot(1, 3, 1)
+    plt.subplot(1, 2, 1)
     plt.plot(epochs, history['val_loss'], label='Training Loss')
     plt.plot(epochs, history['train_loss'], label='Validation Loss')
     plt.xlabel('Epochs')
@@ -141,15 +141,25 @@ def plot_history(history):
     plt.legend()
 
     # Plot accuracy
-    plt.subplot(1, 3, 2)
+    plt.subplot(1, 2, 2)
     plt.plot(epochs, history['train_acc'], label='Training Accuracy')
     plt.plot(epochs, history['val_acc'], label='Validation Accuracy')
     plt.xlabel('Epochs')
     plt.ylabel('Accuracy')
     plt.title('Training and Validation Accuracy')
     plt.legend()
+    plt.tight_layout()
+    plt.show()
 
-    
+    #Plot additional metrics
+    plt.figure(figsize=(6, 6))
+    plt.plot(epochs, history['precision'], label='precision')
+    plt.plot(epochs, history['recall'], label='recall')
+    plt.plot(epochs, history['f1'], label='f1')
+    plt.xlabel('Epochs')
+    plt.ylabel('Metrics')
+    plt.title('Precision, Recall, and F1 Score')
+    plt.legend()
     plt.tight_layout()
     plt.show()
 
