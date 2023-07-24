@@ -40,7 +40,7 @@ def printROC(args, model, dataset):
   color_palette = plt.cm.get_cmap('tab10')
 
   # Plot ROC curves for each class
-  plt.figure(figsize=(12, 6))
+  plt.figure(figsize=(6, 6))
   for class_idx in range(num_classes):
       y_true_class = y_true[:, class_idx]
       y_pred_class = y_pred_proba[:, class_idx]
