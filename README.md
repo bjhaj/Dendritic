@@ -16,8 +16,8 @@ have high potential.
 Due to limited data and low variance, dendrite identification 
 can be considered a fine-grained classification task.
 
-[Access the data.](https://drive.google.com/drive/folders/13fi2c26jC9bgEhUhBvfG8nAqOZridZEp?usp=drive_link)
+[Access](https://drive.google.com/drive/folders/13fi2c26jC9bgEhUhBvfG8nAqOZridZEp?usp=drive_link) the data
 
-[Implementations.](https://github.com/bjhaj/Dendritic/tree/main/notebooks)
+[Implementations](https://github.com/bjhaj/Dendritic/tree/main/notebooks)
 
 More to come.
