@@ -11,7 +11,7 @@ reading dendritic patterns for verification using image data,
 identifying dendrites using a computer vision approach could
 have high potential. 
 
-However, due to limited data and low variance, dendrite identification 
+Due to limited data and low variance, dendrite identification 
 can be considered a fine-grained classification task.
 
 Access the data [here](https://drive.google.com/drive/folders/13fi2c26jC9bgEhUhBvfG8nAqOZridZEp?usp=drive_link).
