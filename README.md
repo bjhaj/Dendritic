@@ -1,5 +1,7 @@
 # Dendritic
 
+![alt text](https://github.com/bjhaj/Dendritic/blob/main/results/dend1.png)
+
 Dendrites are fascinating branching structures that exhibit
 randomness; yet they are unique, non-repeatable, and identifiable
 with the right algorithmic innovations. Unlike barcodes,
