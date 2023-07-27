@@ -74,10 +74,10 @@ def binary_validation_accuracy(args, history, val_loader, model):
     val_loss_meter = AverageMeter()
     num_classes = 1  # Number of classes for binary classification is 1
 
-    # Initialize dictionaries to store true positives, false positives, and false negatives for the positive class (class 1)
-    tp_dict = {i: 0 for i in range(num_classes)}
-    fp_dict = {i: 0 for i in range(num_classes)}
-    fn_dict = {i: 0 for i in range(num_classes)}
+    # Initialize variables to store true positives, false positives, and false negatives for the positive class (class 1)
+    tp = 0
+    fp = 0
+    fn = 0
 
     with torch.no_grad():
         for i, (input, target) in enumerate(val_loader):
@@ -101,13 +101,13 @@ def binary_validation_accuracy(args, history, val_loader, model):
             logits_np = torch.sigmoid(logits).cpu().numpy()  # Use sigmoid activation for binary classification
 
             # Calculate true positives, false positives, and false negatives for the positive class (class 1)
-            tp_dict[0] += np.sum(target_np == 1) & (logits_np >= 0.5)
-            fp_dict[0] += np.sum(target_np == 0) & (logits_np >= 0.5)
-            fn_dict[0] += np.sum(target_np == 1) & (logits_np < 0.5)
+            tp += np.sum((target_np == 1) & (logits_np[:, 0] >= 0.5))
+            fp += np.sum((target_np == 0) & (logits_np[:, 0] >= 0.5))
+            fn += np.sum((target_np == 1) & (logits_np[:, 0] < 0.5))
 
     # Calculate precision, recall, and F1-score for binary classification
-    precision = tp_dict[0] / (tp_dict[0] + fp_dict[0])
-    recall = tp_dict[0] / (tp_dict[0] + fn_dict[0])
+    precision = tp / (tp + fp)
+    recall = tp / (tp + fn)
     f1_score = 2 * (precision * recall) / (precision + recall)
 
     # Print metrics for binary classification
@@ -125,4 +125,5 @@ def binary_validation_accuracy(args, history, val_loader, model):
                     .format(top1.avg, val_loss_meter.avg))
 
     model.train()
+
 
