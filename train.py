@@ -67,7 +67,10 @@ def main():
     model, history = train(model, train_loader, val_loader, optimizer, args)
     plot_history(history)
     torch.save(model,args.save_model_path)
-    printROC(args, model, val_loader.dataset)
+    if (args.num_classes > 2):
+        printROC(args, model, val_loader.dataset)
+    else:
+        binaryROC(args, model, val_loader.dataset)
 
 def train(model, train_loader, val_loader, optimizer, args):
     history = {'train_loss':[],'val_loss':[],'train_acc': [],'val_acc': [],'precision':[],'recall': [],'f1': []}
