@@ -15,11 +15,8 @@ def binaryROC(args, model, dataset):
     # Put the model in evaluation mode
     model.eval()
 
-    # Define the number of classes (for binary classification, it's 1)
-    num_classes = 1
-
     # Create an empty array to store the predicted probabilities for the positive class (class 1)
-    y_pred_proba = np.zeros((len(dataset), num_classes))
+    y_pred_proba = np.zeros((len(dataset),))
 
     # Iterate over the test dataset and generate predictions
     with torch.no_grad():
@@ -27,7 +24,7 @@ def binaryROC(args, model, dataset):
             inputs = inputs.to(device)
             outputs = model(inputs.unsqueeze(0))
             probabilities = torch.sigmoid(outputs).squeeze(0)  # Use sigmoid activation for binary classification
-            y_pred_proba[i] = probabilities.cpu().numpy()
+            y_pred_proba[i] = probabilities.item()
 
     # Convert true labels to binary format (0 or 1)
     y_true = np.array(dataset.targets)
@@ -38,7 +35,7 @@ def binaryROC(args, model, dataset):
     # Plot ROC curve for the positive class (class 1)
     plt.figure(figsize=(6, 6))
     y_true_class = y_true
-    y_pred_class = y_pred_proba[:, 0]  # Positive class probabilities for binary classification
+    y_pred_class = y_pred_proba  # Positive class probabilities for binary classification
 
     fpr, tpr, thresholds = roc_curve(y_true_class, y_pred_class)
     auc = roc_auc_score(y_true_class, y_pred_class)
@@ -55,6 +52,7 @@ def binaryROC(args, model, dataset):
     plt.title('ROC Curve - Binary Classification')
     plt.legend()
     plt.show()
+
 
 def bin_calculate_precision_recall_f1(y_true, y_pred):
     tp = np.sum(y_true & (y_pred >= 0.5))
