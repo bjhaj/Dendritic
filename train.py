@@ -102,7 +102,7 @@ def train(model, train_loader, val_loader, optimizer, args):
 
             train_loss_meter.update(loss.item(), input.size(0))
           
-            acc1, acc5 = accuracy(output, target, topk=(1, 5))
+            acc1 = accuracy(output, target)
             if num_distrib() > 1:
                 acc1 = reduce_tensor(acc1, num_distrib())
                 torch.cuda.synchronize()
