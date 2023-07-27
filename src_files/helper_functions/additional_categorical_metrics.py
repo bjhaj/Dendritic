@@ -95,7 +95,7 @@ def validation_accuracy(args, history, val_loader, model):
             val_loss_meter.update(loss.item(), input.size(0))
 
             # measure accuracy and record accuracy
-            acc1, acc5 = accuracy(logits, target, topk=(1, 5))
+            acc1 = accuracy(logits, target)
             if num_distrib() > 1:
                 acc1 = reduce_tensor(acc1, num_distrib())
                 torch.cuda.synchronize()
