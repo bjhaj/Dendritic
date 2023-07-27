@@ -17,6 +17,8 @@ from src_files.loss_functions.losses import CrossEntropyLS
 from torch.cuda.amp import GradScaler, autocast
 from src_files.optimizers.create_optimizer import create_optimizer
 from src_files.helper_functions.additional_categorical_metrics import printROC, validation_accuracy
+from src_files.helper_functions.binary_metrics import binaryROC, binary_validation_accuracy
+
 
 parser = argparse.ArgumentParser(description='PyTorch ImageNet21K Single-label Training')
 parser.add_argument('--data_path', default = '/content/newtraindata', type=str)
@@ -121,7 +123,10 @@ def train(model, train_loader, val_loader, optimizer, args):
                                                                                                           
 
         # validation epoch
-        validation_accuracy(args, history, val_loader, model)
+        if (args.num_classes > 2):
+            validation_accuracy(args, history, val_loader, model)
+        else:
+            binary_validation_accuracy(args, history, val_loader, model)
 
     return model, history
 
