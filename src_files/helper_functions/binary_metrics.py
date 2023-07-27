@@ -72,14 +72,12 @@ def binary_validation_accuracy(args, history, val_loader, model):
     model.eval()
     top1 = AverageMeter()
     val_loss_meter = AverageMeter()
+    num_classes = 1  # Number of classes for binary classification is 1
 
-    # Number of classes for binary classification is 1
-    num_classes = 1
-
-    # Initialize variables to store true positives, false positives, and false negatives for the positive class (class 1)
-    tp = 0
-    fp = 0
-    fn = 0
+    # Initialize dictionaries to store true positives, false positives, and false negatives for the positive class (class 1)
+    tp_dict = {i: 0 for i in range(num_classes)}
+    fp_dict = {i: 0 for i in range(num_classes)}
+    fn_dict = {i: 0 for i in range(num_classes)}
 
     with torch.no_grad():
         for i, (input, target) in enumerate(val_loader):
@@ -103,18 +101,19 @@ def binary_validation_accuracy(args, history, val_loader, model):
             logits_np = torch.sigmoid(logits).cpu().numpy()  # Use sigmoid activation for binary classification
 
             # Calculate true positives, false positives, and false negatives for the positive class (class 1)
-            tp += np.sum(target_np == 1) & (logits_np >= 0.5)
-            fp += np.sum(target_np == 0) & (logits_np >= 0.5)
-            fn += np.sum(target_np == 1) & (logits_np < 0.5)
+            tp_dict[0] += np.sum(target_np == 1) & (logits_np >= 0.5)
+            fp_dict[0] += np.sum(target_np == 0) & (logits_np >= 0.5)
+            fn_dict[0] += np.sum(target_np == 1) & (logits_np < 0.5)
 
     # Calculate precision, recall, and F1-score for binary classification
-    precision = tp / (tp + fp)
-    recall = tp / (tp + fn)
+    precision = tp_dict[0] / (tp_dict[0] + fp_dict[0])
+    recall = tp_dict[0] / (tp_dict[0] + fn_dict[0])
     f1_score = 2 * (precision * recall) / (precision + recall)
 
     # Print metrics for binary classification
-    print_at_master("Precision: {:.4f}, Recall: {:.4f}, F1 Score: {:.4f}"
-                    .format(precision, recall, f1_score))
+    for class_idx in range(num_classes):
+        print_at_master("Class {}: Precision: {:.4f}, Recall: {:.4f}, F1 Score: {:.4f}"
+                        .format(class_idx, precision, recall, f1_score))
 
     history['val_acc'].append(top1.avg)
     history['val_loss'].append(val_loss_meter.avg)
@@ -126,3 +125,4 @@ def binary_validation_accuracy(args, history, val_loader, model):
                     .format(top1.avg, val_loss_meter.avg))
 
     model.train()
+
