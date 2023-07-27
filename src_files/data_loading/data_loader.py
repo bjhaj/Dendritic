@@ -32,6 +32,7 @@ def create_data_loaders(args):
     val_dataset = ImageFolder(data_path_val, transform=val_transform)
     print_at_master("length train dataset: {}".format(len(train_dataset)))
     print_at_master("length val dataset: {}".format(len(val_dataset)))
+    print_at_master("classes: {}".format(len(train_dataset.classes)))
 
     sampler_train = None
     sampler_val = None
