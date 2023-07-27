@@ -112,8 +112,8 @@ def binary_validation_accuracy(args, history, val_loader, model):
 
     # Print metrics for binary classification
     for class_idx in range(num_classes):
-        print_at_master("Class {}: Precision: {:.4f}, Recall: {:.4f}, F1 Score: {:.4f}"
-                        .format(class_idx, precision, recall, f1_score))
+        print_at_master("Precision: {:.4f}, Recall: {:.4f}, F1 Score: {:.4f}"
+                        .format(precision, recall, f1_score))
 
     history['val_acc'].append(top1.avg)
     history['val_loss'].append(val_loss_meter.avg)
