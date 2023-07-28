@@ -70,7 +70,7 @@ def main():
     if (args.num_classes > 2):
         printROC(args, model, val_loader.dataset)
     else:
-        binaryROC(args, model, val_loader.dataset)
+        binaryROC(model, val_loader)
 
 def train(model, train_loader, val_loader, optimizer, args):
     history = {'train_loss':[],'val_loss':[],'train_acc': [],'val_acc': [],'precision':[],'recall': [],'f1': []}
