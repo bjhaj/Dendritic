@@ -126,10 +126,9 @@ def train(model, train_loader, val_loader, optimizer, args):
                                                                                                           
 
         # validation epoch
-        if (args.num_classes > 2):
-            validation_accuracy(args, history, val_loader, model)
-        else:
-            binary_validation_accuracy(args, history, val_loader, model)
+        
+        validation_accuracy(args, history, val_loader, model)
+        
 
     return model, history
 
