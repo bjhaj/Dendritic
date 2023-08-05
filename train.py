@@ -158,17 +158,17 @@ def plot_history(history):
     plt.tight_layout()
     plt.show()
 
-    #Plot additional metrics
-    plt.figure(figsize=(6, 6))
-    plt.plot(epochs, history['precision'], label='precision')
-    plt.plot(epochs, history['recall'], label='recall')
-    plt.plot(epochs, history['f1'], label='f1')
-    plt.xlabel('Epochs')
-    plt.ylabel('Metrics')
-    plt.title('Precision, Recall, and F1 Score')
-    plt.legend()
-    plt.tight_layout()
-    plt.show()
+    #Plot additional metrics (NEEDS TO BE UPDATED)
+    #plt.figure(figsize=(6, 6))
+    #plt.plot(epochs, history['precision'], label='precision')
+    #plt.plot(epochs, history['recall'], label='recall')
+    #plt.plot(epochs, history['f1'], label='f1')
+    #plt.xlabel('Epochs')
+    #plt.ylabel('Metrics')
+    #plt.title('Precision, Recall, and F1 Score')
+    #plt.legend()
+    #plt.tight_layout()
+    #plt.show()
 
     
     
